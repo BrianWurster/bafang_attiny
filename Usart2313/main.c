@@ -1,18 +1,16 @@
-/*
- * Usart2313.c
- *
- * Created: 9/21/2018 2:23:59 PM
- * Author : brianw
- */ 
-
 #include <avr/io.h>
+#include "usart.h"
 
-
-int main(void)
-{
-    /* Replace with your application code */
-    while (1) 
-    {
-    }
+void init() {
+	USART_Init( UBRR );
 }
 
+int main( void ) {
+	init();
+	
+    while( 1 ) {
+		for( uint8_t i=0; i<0xFF; i++ ) {
+			USART_Transmit( i );
+		}
+    }
+}
