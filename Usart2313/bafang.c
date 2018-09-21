@@ -35,6 +35,15 @@ void bafangIdle() {
 		
 		case STATE_LENGTH:
 			len = *ptr;
+			
+			// prevent overflow
+			if( len + 3 > sizeof(packet) ) {
+				state = STATE_WAITING;
+				ptr = packet;
+				len = 0;
+				return;
+			}
+			
 			ptr++;
 			state = STATE_DATA;
 			return;
