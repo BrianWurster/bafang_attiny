@@ -12,6 +12,7 @@ extern volatile uint8_t rx_tail;
 void USART_Init( unsigned int baud );
 void USART_Transmit( unsigned char data );
 unsigned char USART_Receive( void );
-void USART_Tx();
+void USART_putbuf( uint8_t* buffer, int len );
+void USART_putc( uint8_t c );
 
 #endif /* USART_H_ */

@@ -6,6 +6,10 @@ uint8_t rx_buffer[BUFFER_SIZE];
 volatile uint8_t rx_head = 0;
 volatile uint8_t rx_tail = 0;
 
+uint8_t tx_buffer[BUFFER_SIZE];
+volatile uint8_t tx_head = 0;
+volatile uint8_t tx_tail = 0;
+
 void USART_Init( unsigned int baud ) {
 	// Set baud rate
 	UBRRH = (unsigned char)(baud>>8);
@@ -34,16 +38,6 @@ unsigned char USART_Receive( void ) {
 	return UDR;
 }
 
-void USART_Tx() {
-	if( rx_head == rx_tail ) {
-		return;
-	}
-	
-	uint8_t tmp_tail = (rx_tail + 1) % BUFFER_SIZE;
-	USART_Transmit( rx_buffer[rx_tail] );
-	rx_tail = tmp_tail;
-}
-
 // Called when USART completes receiving data
 ISR( USART_RX_vect ) {
 	// Read UDR register
@@ -56,4 +50,32 @@ ISR( USART_RX_vect ) {
 		rx_buffer[rx_head] = data;
 		rx_head = tmp_head;
 	}
+}
+
+void USART_putbuf( uint8_t* buffer, int len ) {
+	uint8_t *c = buffer;
+	for( int i=0; i<len; i++ ) {
+		USART_putc( *c );
+		c++;
+	}
+}
+
+void USART_putc( uint8_t c ) {
+	uint8_t tmp_head = (tx_head + 1) % BUFFER_SIZE;
+	tx_buffer[tx_head] = c;
+	tx_head = tmp_head;
+	UCSRB |= (1<<UDRIE);
+}
+
+// Called when the Data Register Empty
+ISR( USART_UDRE_vect ) {
+	if( tx_head == tx_tail ) {
+		// need to disable interrupt if no more data
+		UCSRB &= ~(1<<UDRIE); 
+		return;
+	}
+	
+	uint8_t tmp_tail = (tx_tail + 1) % BUFFER_SIZE;
+	UDR = tx_buffer[tx_tail];
+	tx_tail = tmp_tail;
 }
