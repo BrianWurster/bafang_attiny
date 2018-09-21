@@ -9,4 +9,6 @@
 #define CMD_CONNECT				(0x51)
 #define CMD_PEDAL				(0x53)
 
+void bafangIdle();
+
 #endif /* BAFANG_H_ */
