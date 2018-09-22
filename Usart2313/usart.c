@@ -22,12 +22,13 @@ void USART_Init( unsigned int baud ) {
 	UCSRC = (1<<UCSZ0)|(1<<UCSZ1);
 }
 
-void USART_Transmit( unsigned char data ) {
+uint8_t USART_Transmit( unsigned char data ) {
 	// Wait for empty transmit buffer
 	while ( !( UCSRA & (1<<UDRE)) );
 	
 	// Put data into buffer, sends the data
 	UDR = data;
+	return 1;
 }
 
 unsigned char USART_Receive( void ) {
@@ -43,6 +44,10 @@ ISR( USART_RX_vect ) {
 	// Read UDR register
 	uint8_t data = UDR;
 	uint8_t tmp_head = (rx_head + 1) % BUFFER_SIZE;
+	if( tmp_head == rx_tail ) {
+		// rx buffer full, drop byte
+		return;
+	}
 
 	// Check for frame error, data overrun, parity error
 	if( (UCSRA & ((1 << FE) | (1 << DOR) | (1 << UPE))) == 0 ) {
@@ -52,31 +57,46 @@ ISR( USART_RX_vect ) {
 	}
 }
 
-void USART_putbuf( uint8_t* buffer, int len ) {
+int USART_putbuf( uint8_t* buffer, int len ) {
+	int i = 0;
+	int sent = 0;
 	uint8_t *c = buffer;
-	for( int i=0; i<len; i++ ) {
-		//USART_putc( *c );
-		USART_Transmit( *c );
-		c++;
-	}
+	
+	 for( i=0; i<len; i++ ) {
+		 //if( USART_putc( *c ) ) {
+		 if( USART_Transmit( *c ) ) {
+			 sent++;
+		 } else {
+			 break;
+		 }
+		 c++;
+	 }
+	
+	return sent;
 }
 
-/*void USART_putc( uint8_t c ) {
+// memory requirements are too high for interrupt based TX
+/*uint8_t USART_putc( uint8_t c ) {
 	uint8_t tmp_head = (tx_head + 1) % BUFFER_SIZE;
+	if( tmp_head == tx_tail ) {
+		// tx buffer full
+		return 0;
+	}
+	
 	tx_buffer[tx_head] = c;
 	tx_head = tmp_head;
 	UCSRB |= (1<<UDRIE);
+	return 1;
 }
 
 // Called when the Data Register Empty
 ISR( USART_UDRE_vect ) {
-	if( tx_head == tx_tail ) {
+	if( tx_tail == tx_head ) {
 		// need to disable interrupt if no more data
 		UCSRB &= ~(1<<UDRIE); 
 		return;
 	}
 	
-	uint8_t tmp_tail = (tx_tail + 1) % BUFFER_SIZE;
 	UDR = tx_buffer[tx_tail];
-	tx_tail = tmp_tail;
+	tx_tail = (tx_tail + 1) % BUFFER_SIZE;
 }*/

@@ -3,7 +3,7 @@
 #include "bafang.h"
 #include "usart.h"
 
-uint8_t packet[32];
+uint8_t packet[28];
 uint8_t state = STATE_WAITING;
 uint8_t *ptr = packet;
 uint8_t len = 0;
