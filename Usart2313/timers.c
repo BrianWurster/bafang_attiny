@@ -6,7 +6,6 @@
 // process the timer1 compare here (1ms)
 ISR(TIMER1_COMPA_vect) {
 	checkSwitch();
-	PORTD ^= (1<<5);
 }
 
 /*
@@ -33,6 +32,4 @@ void initTimer1() {
 	TIMSK |= (1 << OCIE1A);
 	// initialize counter
 	TCNT1 = 0;
-	
-	DDRD |= (1<<5);
 }

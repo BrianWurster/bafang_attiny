@@ -18,6 +18,7 @@ int main( void ) {
 	
     while( 1 ) {
 		if( isSwitchReady() ) {
+			USART_Transmit( 0xfc );
 			setReady( 0 );
 		}
 	
