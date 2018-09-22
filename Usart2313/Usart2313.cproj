@@ -130,7 +130,19 @@
     <Compile Include="bafang.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="debounce.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="debounce.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="main.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="timers.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="timers.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="usart.c">
