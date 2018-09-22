@@ -6,9 +6,9 @@ uint8_t rx_buffer[BUFFER_SIZE];
 volatile uint8_t rx_head = 0;
 volatile uint8_t rx_tail = 0;
 
-uint8_t tx_buffer[BUFFER_SIZE];
-volatile uint8_t tx_head = 0;
-volatile uint8_t tx_tail = 0;
+//uint8_t tx_buffer[BUFFER_SIZE];
+//volatile uint8_t tx_head = 0;
+//volatile uint8_t tx_tail = 0;
 
 void USART_Init( unsigned int baud ) {
 	// Set baud rate
@@ -61,7 +61,7 @@ void USART_putbuf( uint8_t* buffer, int len ) {
 	}
 }
 
-void USART_putc( uint8_t c ) {
+/*void USART_putc( uint8_t c ) {
 	uint8_t tmp_head = (tx_head + 1) % BUFFER_SIZE;
 	tx_buffer[tx_head] = c;
 	tx_head = tmp_head;
@@ -79,4 +79,4 @@ ISR( USART_UDRE_vect ) {
 	uint8_t tmp_tail = (tx_tail + 1) % BUFFER_SIZE;
 	UDR = tx_buffer[tx_tail];
 	tx_tail = tmp_tail;
-}
+}*/
