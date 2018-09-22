@@ -4,10 +4,10 @@
 #include "bafang.h"
 
 uint8_t packet[BUFFER_SIZE];
-uint8_t state = STATE_WAITING;
-uint8_t bfState = BAFANG_STATE_IDLE;
-uint8_t *ptr = packet;
-uint8_t len = 0;
+volatile uint8_t state = STATE_WAITING;
+volatile uint8_t bfState = BAFANG_STATE_IDLE;
+volatile uint8_t *ptr = packet;
+volatile uint8_t len = 0;
 
 uint8_t calcCheckSum( uint8_t *data, uint8_t len ) {
 	uint16_t crc = 0;
@@ -32,19 +32,8 @@ void sendReadCmd( uint8_t cmd ) {
 
 void bafangState() {
 	bafangPacket_t *pkt = (bafangPacket_t *)&packet;
-	switch( bfState ) {
-		case BAFANG_STATE_IDLE:
-			if( pkt->header.cmd == CMD_CONNECT ) {
-				bfState = BAFANG_STATE_CONNECTED;
-				sendReadCmd( CMD_PEDAL );
-			}
-			break;
-		
-		case BAFANG_STATE_CONNECTED:
-			if( pkt->header.cmd == CMD_PEDAL ) {
-				bfState = BAFANG_STATE_PEDAL;
-			}
-			break;
+	if( pkt->header.cmd == CMD_PEDAL ) {
+		bfState = BAFANG_STATE_PEDALR;
 	}
 }
 
@@ -52,6 +41,7 @@ void bafangReset() {
 	state = STATE_WAITING;
 	ptr = packet;
 	len = 0;
+	USART_reset();
 }
 
 void bafangIdle() {
@@ -70,7 +60,7 @@ void bafangIdle() {
 	
 	switch( state ) {
 		case STATE_WAITING:
-			if( *ptr == CMD_CONNECT || *ptr == CMD_PEDAL ) {
+			if( *ptr == CMD_PEDAL ) {
 				ptr++;
 				state = STATE_LENGTH;
 			}
@@ -98,6 +88,15 @@ void bafangIdle() {
 			}
 			
 			ptr++;
+			return;
+			
+		case STATE_WRITE_RESP:
+			// dispose of write response which has same cmd type 0x53 as pedal read
+			len--;
+			if( len == 0 ) {
+				state = STATE_WAITING;
+				bafangReset();
+			}
 			return;
 	}
 }

@@ -1,5 +1,6 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <string.h>
 #include "usart.h"
 
 uint8_t rx_buffer[BUFFER_SIZE];
@@ -20,6 +21,15 @@ void USART_Init( unsigned int baud ) {
 	
 	// Set frame format: 8N1
 	UCSRC = (1<<UCSZ0)|(1<<UCSZ1);
+	USART_reset();
+}
+
+void USART_reset() {
+	cli();
+	rx_head = 0;
+	rx_tail = 0;
+	memset( rx_buffer, 0, sizeof(rx_buffer) );
+	sei();
 }
 
 uint8_t USART_Transmit( unsigned char data ) {

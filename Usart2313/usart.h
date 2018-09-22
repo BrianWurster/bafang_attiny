@@ -10,6 +10,7 @@ extern volatile uint8_t rx_head;
 extern volatile uint8_t rx_tail;
 
 void USART_Init( unsigned int baud );
+void USART_reset();
 uint8_t USART_Transmit( unsigned char data );
 unsigned char USART_Receive( void );
 int USART_putbuf( uint8_t* buffer, int len );

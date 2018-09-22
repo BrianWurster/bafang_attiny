@@ -5,22 +5,23 @@
 #define STATE_LENGTH			(1)
 #define STATE_DATA				(2)
 #define STATE_HANDLE			(3)
+#define STATE_WRITE_RESP		(4)
 
 #define BAFANG_READ				(0x11)
 #define BAFANG_WRITE			(0x16)
 
 #define BAFANG_STATE_IDLE		(0)
-#define BAFANG_STATE_CONNECTED	(1)
-#define BAFANG_STATE_PEDAL		(2)
+#define BAFANG_STATE_PEDALR		(2)
 #define BAFANG_STATE_PEDALW		(3)
 
-#define CMD_CONNECT				(0x51)
 #define CMD_PEDAL				(0x53)
 
 #define BAFANG_HEADER_SIZE		(2)
 
 extern uint8_t packet[BUFFER_SIZE];
-extern uint8_t bfState;
+extern volatile uint8_t state;
+extern volatile uint8_t bfState;
+extern volatile uint8_t len;
 
 typedef struct bafangHeader {
 	uint8_t cmd;
@@ -49,6 +50,7 @@ typedef struct bfReadPedalCmd {
 } bfReadPedalCmd_t;
 
 uint8_t calcCheckSum( uint8_t *data, uint8_t len );
+void sendReadCmd( uint8_t cmd );
 void bafangIdle();
 
 #endif /* BAFANG_H_ */
