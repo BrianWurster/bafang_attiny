@@ -6,6 +6,7 @@
 // process the timer1 compare here (1ms)
 ISR(TIMER1_COMPA_vect) {
 	checkSwitch();
+	PORTD ^= (1<<5);
 }
 
 /*
@@ -20,12 +21,18 @@ OCR1A = value in OCR1A register
 
 // 16-bit timer
 void initTimer1() {
-	// ctc mode, prescaler /256
-	TCCR1B |= (1<<WGM12) | (1<<CS12);
-	OCR1A = 0x06;		  // 1ms resolution @ 1843200 /256
+	//TCCR1B |= (1<<WGM12) | (1<<CS12); // ctc mode, prescaler /256
+	TCCR1B |= (1<<WGM12) | (1<<CS12) | (1<<CS10); // ctc mode, prescaler /1024
+	
+	//OCR1A = 0x24;		  // 5ms resolution @ 1843200 /256
+	//OCR1A = 0x06;		  // 1ms resolution @ 1843200 /256
 	//OCR1A = 0x0D;		  // 1ms resolution @ 14745600 /1024
+	OCR1A = 0x4e;		  // 5ms resolution @ 14745600 /1024
+	
 	// enable compare interrupt
 	TIMSK |= (1 << OCIE1A);
 	// initialize counter
 	TCNT1 = 0;
+	
+	DDRD |= (1<<5);
 }

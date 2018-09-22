@@ -22,5 +22,13 @@ int main( void ) {
 		}
 	
 		bafangIdle();
+		
+		/*if( rx_head == rx_tail ) {
+			continue;
+		}
+		
+		uint8_t tmp_tail = (rx_tail + 1) % BUFFER_SIZE;
+		USART_putc( rx_buffer[rx_tail] );
+		rx_tail = tmp_tail;*/
     }
 }

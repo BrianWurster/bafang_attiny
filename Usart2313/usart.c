@@ -55,7 +55,8 @@ ISR( USART_RX_vect ) {
 void USART_putbuf( uint8_t* buffer, int len ) {
 	uint8_t *c = buffer;
 	for( int i=0; i<len; i++ ) {
-		USART_putc( *c );
+		//USART_putc( *c );
+		USART_Transmit( *c );
 		c++;
 	}
 }
