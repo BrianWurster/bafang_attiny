@@ -1,16 +1,42 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include "bafang.h"
 #include "usart.h"
+#include "bafang.h"
 
-uint8_t packet[28];
+uint8_t packet[BUFFER_SIZE];
 uint8_t state = STATE_WAITING;
+uint8_t bfState = BAFANG_STATE_IDLE;
 uint8_t *ptr = packet;
 uint8_t len = 0;
 
+void sendReadCmd( uint8_t cmd ) {
+	uint8_t buffer[2];
+	buffer[0] = BAFANG_READ;
+	buffer[1] = cmd;
+	USART_putbuf( buffer, sizeof(buffer) );
+}
+
+void bafangState() {
+	bafangPacket_t *pkt = (bafangPacket_t *)&packet;
+	switch( bfState ) {
+		case BAFANG_STATE_IDLE:
+			if( pkt->header.cmd == CMD_CONNECT ) {
+				bfState = BAFANG_STATE_CONNECTED;
+				sendReadCmd( CMD_PEDAL );
+			}
+			break;
+		
+		case BAFANG_STATE_CONNECTED:
+			if( pkt->header.cmd == CMD_PEDAL ) {
+				bfState = BAFANG_STATE_PEDAL;
+			}
+			break;
+	}
+}
+
 void bafangIdle() {
 	if( state == STATE_HANDLE ) {
-		USART_putbuf( packet, packet[1] + 3 ); // 2-byte header + crc
+		bafangState();
 		
 		state = STATE_WAITING;
 		ptr = packet;
@@ -37,7 +63,7 @@ void bafangIdle() {
 			len = *ptr;
 			
 			// prevent overflow
-			if( len + 3 > sizeof(packet) ) {
+			if( (len + sizeof(bafangHeader_t) + 1) > sizeof(packet) ) {
 				state = STATE_WAITING;
 				ptr = packet;
 				len = 0;
