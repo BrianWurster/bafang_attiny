@@ -24,18 +24,25 @@ void init() {
 
 int main( void ) {
 	uint8_t connectCmd[] = { BAFANG_READ, CMD_CONNECT, 0x04, 0xB0, 0x05 };
+	bfReadPedalCmd_t *pkt = (bfReadPedalCmd_t *)&packet;
 	
 	init();
 	
     while( 1 ) {
 		if( bfState == BAFANG_STATE_PEDAL ) {
 			USART_putbuf( packet, packet[1] + (sizeof(bafangHeader_t) + 1) ); // 2-byte header + crc
-			bfState = BAFANG_STATE_IDLE;
+			bfState = BAFANG_STATE_PEDALW;
 		}
 		
 		if( isSwitchReady() ) {
 			if( bfState == BAFANG_STATE_IDLE ) {
 				USART_putbuf( connectCmd, sizeof(connectCmd) );
+			}
+			else if( bfState == BAFANG_STATE_PEDALW ) {
+				pkt->speedLimit = 0xff;
+				pkt->checkSum = calcCheckSum( packet, packet[1]+sizeof(bafangHeader_t) );
+				USART_putbuf( packet, packet[1] + (sizeof(bafangHeader_t) + 1) ); // 2-byte header + crc
+				bfState = BAFANG_STATE_IDLE;
 			}
 			setReady( 0 );
 		}

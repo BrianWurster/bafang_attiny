@@ -9,6 +9,20 @@ uint8_t bfState = BAFANG_STATE_IDLE;
 uint8_t *ptr = packet;
 uint8_t len = 0;
 
+uint8_t calcCheckSum( uint8_t *data, uint8_t len ) {
+	uint16_t crc = 0;
+	uint8_t *d = data;
+	int i;
+	
+	for( i=0; i<len; i++ ) {
+		crc += *d;
+		d++;
+	}
+	
+	crc = crc % 256;
+	return (uint8_t)crc;
+}
+
 void sendReadCmd( uint8_t cmd ) {
 	uint8_t buffer[2];
 	buffer[0] = BAFANG_READ;
@@ -34,13 +48,16 @@ void bafangState() {
 	}
 }
 
+void bafangReset() {
+	state = STATE_WAITING;
+	ptr = packet;
+	len = 0;
+}
+
 void bafangIdle() {
 	if( state == STATE_HANDLE ) {
 		bafangState();
-		
-		state = STATE_WAITING;
-		ptr = packet;
-		len = 0;
+		bafangReset();
 	}
 	
 	if( rx_head == rx_tail ) {
@@ -64,9 +81,7 @@ void bafangIdle() {
 			
 			// prevent overflow
 			if( (len + sizeof(bafangHeader_t) + 1) > sizeof(packet) ) {
-				state = STATE_WAITING;
-				ptr = packet;
-				len = 0;
+				bafangReset();
 				return;
 			}
 			
@@ -75,14 +90,14 @@ void bafangIdle() {
 			return;
 		
 		case STATE_DATA:
-			ptr++;
-			
 			if( len == 0x0 ) {
 				state = STATE_HANDLE;
 			}
 			else {
 				len = len - 1;
 			}
+			
+			ptr++;
 			return;
 	}
 }

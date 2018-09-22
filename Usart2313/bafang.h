@@ -12,6 +12,7 @@
 #define BAFANG_STATE_IDLE		(0)
 #define BAFANG_STATE_CONNECTED	(1)
 #define BAFANG_STATE_PEDAL		(2)
+#define BAFANG_STATE_PEDALW		(3)
 
 #define CMD_CONNECT				(0x51)
 #define CMD_PEDAL				(0x53)
@@ -47,6 +48,7 @@ typedef struct bfReadPedalCmd {
 	uint8_t checkSum;				// (0x27)
 } bfReadPedalCmd_t;
 
+uint8_t calcCheckSum( uint8_t *data, uint8_t len );
 void bafangIdle();
 
 #endif /* BAFANG_H_ */
