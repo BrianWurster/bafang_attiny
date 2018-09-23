@@ -48,6 +48,9 @@ void initTimer1() {
 }
 
 void startBlink() {
+	PORTD &= ~(1<<3);
+	PORTD &= ~(1<<4);
+	PORTD &= ~(1<<5);
 	TIMSK |= (1<<TOIE0);
 }
 

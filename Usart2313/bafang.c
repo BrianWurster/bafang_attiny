@@ -2,7 +2,6 @@
 #include <avr/interrupt.h>
 #include "usart.h"
 #include "bafang.h"
-#include "timers.h"
 
 uint8_t packet[BUFFER_SIZE];
 volatile uint8_t state = STATE_WAITING;
@@ -95,8 +94,8 @@ void bafangIdle() {
 			// dispose of write response which has same cmd type 0x53 as pedal read
 			len--;
 			if( len == 0 ) {
-				stopModal();
 				state = STATE_WAITING;
+				sendReadCmd( CMD_PEDAL );
 				bafangReset();
 			}
 			return;

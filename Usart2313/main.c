@@ -6,6 +6,13 @@
 #include "timers.h"
 #include "debounce.h"
 
+#define DISPLAY_SET	(0xff)
+#define MPH20		(0x20)
+#define MPH25		(0x28)
+
+uint8_t verifyRead = 0;
+uint8_t readSpeed = 0;
+
 void init() {
 	// set leds as outputs
 	DDRD |= (1<<3)|(1<<4)|(1<<5);
@@ -26,6 +33,23 @@ void init() {
 	sei();
 }
 
+void updateSpeed( uint8_t speed ) {
+	readSpeed = speed;
+	
+	// display set
+	if( readSpeed == DISPLAY_SET ) {
+		PORTD |= (1<<3);
+	}
+	// 20mph
+	else if( readSpeed == MPH20 ) {
+		PORTD |= (1<<4);
+	}
+	// 25mph
+	if( readSpeed == MPH25 ) {
+		PORTD |= (1<<5);
+	}
+}
+
 int main( void ) {
 	bfReadPedalCmd_t *pkt = (bfReadPedalCmd_t *)&packet;
 	
@@ -34,7 +58,16 @@ int main( void ) {
     while( 1 ) {
 		if( bfState == BAFANG_STATE_PEDALR ) {
 			USART_putbuf( packet, packet[1] + (sizeof(bafangHeader_t) + 1) ); // 2-byte header + crc
-			bfState = BAFANG_STATE_PEDALW;
+			
+			if( verifyRead ) {
+				verifyRead = 0;
+				stopModal();
+				updateSpeed( pkt->speedLimit );
+				bfState = BAFANG_STATE_IDLE;
+			} else {
+				verifyRead = 1;
+				bfState = BAFANG_STATE_PEDALW;
+			}
 		}
 		else if( bfState == BAFANG_STATE_PEDALW ) {
 			pkt->speedLimit = 0xff;
