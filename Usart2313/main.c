@@ -10,8 +10,30 @@
 #define MPH20		(0x20)
 #define MPH25		(0x28)
 
-uint8_t verifyRead = 0;
+#define INITIAL_READ	(0)
+#define STD_READ		(1)
+#define VERIFY_READ		(2)
+
+uint8_t readState = INITIAL_READ;
 uint8_t readSpeed = 0;
+volatile uint8_t writeSpeed = 0;
+
+// TODO: debounce, investigate wrong values
+void captureRotarySwitch() {
+	if( PINB & (1<<PINB2) ) {
+		writeSpeed = MPH20;
+	}
+	if( PINB & (1<<PINB1) ) {
+		writeSpeed = MPH25;
+	}
+	if( PINB & (1<<PINB0) ) {
+		writeSpeed = DISPLAY_SET;
+	}
+}
+
+ISR(PCINT0_vect) {
+	captureRotarySwitch();
+}
 
 void init() {
 	// set leds as outputs
@@ -28,6 +50,8 @@ void init() {
 	USART_Init( UBRR );
 	
 	_delay_ms(250);
+	captureRotarySwitch();
+	sendReadCmd( CMD_PEDAL );
 	
 	// Enable interrupts
 	sei();
@@ -59,18 +83,23 @@ int main( void ) {
 		if( bfState == BAFANG_STATE_PEDALR ) {
 			USART_putbuf( packet, packet[1] + (sizeof(bafangHeader_t) + 1) ); // 2-byte header + crc
 			
-			if( verifyRead ) {
-				verifyRead = 0;
+			if( readState == INITIAL_READ ) {
+				readState = STD_READ;
+				updateSpeed( pkt->speedLimit );
+				bfState = BAFANG_STATE_IDLE;
+			}
+			else if( readState == VERIFY_READ ) {
+				readState = STD_READ;
 				stopModal();
 				updateSpeed( pkt->speedLimit );
 				bfState = BAFANG_STATE_IDLE;
 			} else {
-				verifyRead = 1;
+				readState = VERIFY_READ;
 				bfState = BAFANG_STATE_PEDALW;
 			}
 		}
 		else if( bfState == BAFANG_STATE_PEDALW ) {
-			pkt->speedLimit = 0xff;
+			pkt->speedLimit = writeSpeed;
 			pkt->checkSum = calcCheckSum( packet, packet[1]+sizeof(bafangHeader_t) );
 			
 			state = STATE_WRITE_RESP;
@@ -92,28 +121,4 @@ int main( void ) {
 	
 		bafangIdle();
     }
-}
-
-void setLedToRotarySwitch() {
-	if( PINB & (1<<PINB2) ) {
-		PORTD &= ~(1<<3);
-	} else {
-		PORTD |= (1<<3);
-	}
-	
-	if( PINB & (1<<PINB1) ) {
-		PORTD &= ~(1<<4);
-	} else {
-		PORTD |= (1<<4);
-	}
-	
-	if( PINB & (1<<PINB0) ) {
-		PORTD &= ~(1<<5);
-	} else {
-		PORTD |= (1<<5);
-	}
-}
-
-ISR(PCINT0_vect) {
-	setLedToRotarySwitch();
 }
