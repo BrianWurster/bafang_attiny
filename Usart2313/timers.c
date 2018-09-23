@@ -3,6 +3,19 @@
 #include "timers.h"
 #include "debounce.h"
 
+int counter = 0;
+
+ISR(TIMER0_OVF_vect) {
+	counter++;
+	
+	if( counter == 2 ) {
+		PORTD ^= (1<<3);
+		PORTD ^= (1<<4);
+		PORTD ^= (1<<5);
+		counter = 0;
+	}
+}
+
 // process the timer1 compare here (1ms)
 ISR(TIMER1_COMPA_vect) {
 	checkSwitch();
@@ -31,5 +44,39 @@ void initTimer1() {
 	// enable compare interrupt
 	TIMSK |= (1 << OCIE1A);
 	// initialize counter
-	TCNT1 = 0;
+	//TCNT1 = 0;
+}
+
+void startBlink() {
+	TIMSK |= (1<<TOIE0);
+}
+
+void stopBlink() {
+	TIMSK &= ~(1<<TOIE0);
+	PORTD &= ~(1<<3);
+	PORTD &= ~(1<<4);
+	PORTD &= ~(1<<5);
+}
+
+void startDebounce() {
+	TIMSK |= (1<<OCIE1A);
+}
+
+void stopDebounce() {
+	TIMSK &= ~(1<<OCIE1A);
+}
+
+void startModal() {
+	startBlink();
+	stopDebounce();
+}
+
+void stopModal() {
+	stopBlink();
+	startDebounce();
+}
+
+void initTimer0() {
+	TCCR0B |= (1<<CS02)|(1<<CS00); // clock source CLK/1024, start timer
+	//TIMSK |= (1<<TOIE0);
 }
