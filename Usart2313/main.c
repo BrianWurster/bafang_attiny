@@ -18,21 +18,16 @@ uint8_t readState = INITIAL_READ;
 uint8_t readSpeed = 0;
 volatile uint8_t writeSpeed = 0;
 
-// TODO: debounce, investigate wrong values
 void captureRotarySwitch() {
-	if( PINB & (1<<PINB2) ) {
-		writeSpeed = MPH20;
-	}
-	if( PINB & (1<<PINB1) ) {
-		writeSpeed = MPH25;
-	}
-	if( PINB & (1<<PINB0) ) {
+	if( (PINB & (1<<PINB2)) == 0 ) {
 		writeSpeed = DISPLAY_SET;
 	}
-}
-
-ISR(PCINT0_vect) {
-	captureRotarySwitch();
+	if( (PINB & (1<<PINB1)) == 0 ) {
+		writeSpeed = MPH20;
+	}
+	if( (PINB & (1<<PINB0)) == 0 ) {
+		writeSpeed = MPH25;
+	}
 }
 
 void init() {
@@ -41,9 +36,6 @@ void init() {
 	PORTD &= ~(1<<3);
 	PORTD &= ~(1<<4);
 	PORTD &= ~(1<<5);
-	
-	PCMSK |= (1<<PCINT0)|(1<<PCINT1)|(1<<PCINT2);	// pin change mask
-	GIMSK |= (1<<PCIE0);							// enable PCINT interrupt
 	
 	initTimer0();
 	initTimer1();
@@ -80,6 +72,8 @@ int main( void ) {
 	init();
 	
     while( 1 ) {
+		captureRotarySwitch();
+		
 		if( bfState == BAFANG_STATE_PEDALR ) {
 			USART_putbuf( packet, packet[1] + (sizeof(bafangHeader_t) + 1) ); // 2-byte header + crc
 			
