@@ -75,7 +75,7 @@ int main( void ) {
 		captureRotarySwitch();
 		
 		if( bfState == BAFANG_STATE_PEDALR ) {
-			USART_putbuf( packet, packet[1] + (sizeof(bafangHeader_t) + 1) ); // 2-byte header + crc
+			//USART_putbuf( packet, packet[1] + (sizeof(bafangHeader_t) + 1) ); // 2-byte header + crc
 			
 			if( readState == INITIAL_READ ) {
 				readState = STD_READ;
